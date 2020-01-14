@@ -57,11 +57,19 @@ class Board(pygame.Surface):
         if self.selected is not None:
             pygame.draw.rect(self, BLUE, self.selected.rect, width=2)
 
-
     def handle_click(self, pos):
         col = pos[0] // (self.get_width() // 9)
         row = pos[1] // (self.get_height() // 9)
         self.selected = self.grid[row][col]
+
+    def handle_key(self, key):
+        if self.selected is not None:
+            if key == 13:
+                print('enter pressed!')
+            elif key == 27:
+                self.selected = None
+            elif key >= 48 and key <= 57:
+                self.selected.val = key - 48
 
 def main():
     pygame.init()
@@ -81,6 +89,9 @@ def main():
                 pos = pygame.mouse.get_pos()
                 if pos[0] < board.get_width() and pos[1] < board.get_height():
                     board.handle_click(pos)
+            if event.type == pygame.KEYDOWN:
+                if event.mod == pygame.KMOD_NONE:
+                    board.handle_key(event.key)
            
         screen.fill(WHITE)
         
