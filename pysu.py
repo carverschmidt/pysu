@@ -16,8 +16,10 @@ WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
 
 class Square:
-    def __init__(self, rect):
+    def __init__(self, rect, row, col):
         self.rect = rect
+        self.row = row
+        self.col = col
         self.val = None
         self.temp = True
 
@@ -34,7 +36,7 @@ class Board(pygame.Surface):
                 rect = pygame.Rect((self.get_width() // 9) * col,
                                     (+ self.get_height() // 9) * row,
                                     self.get_width() // 9, self.get_height() // 9)
-                r.append(Square(rect))
+                r.append(Square(rect, row, col))
             self.grid.append(r)
 
         # selected square for input
@@ -47,16 +49,34 @@ class Board(pygame.Surface):
                 pygame.draw.rect(self, BLACK, square.rect, width=1)
                 if square.val is not None:
                     if square.temp:
-                        font = pygame.font.Font(None, 18)
+                        font = pygame.font.Font(None, 32)
                         text = font.render(str(square.val), True, BLACK)
-                        self.blit(text, (0, 0))
-                    elif not square.temp:
+                        alpha = pygame.Surface(text.get_size(), pygame.SRCALPHA)
+                        alpha.fill((255, 255, 255, 140))
+                        text.blit(alpha, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+                        self.blit(text, (square.rect.x + 5, square.rect.y + 5))
+                    else square.temp:
                         font = pygame.font.Font(None, 24)
                         text = font.render(str(square.val), True, BLACK)
-                        self.blit(text, (0, 0))
+                        self.blit(text, square.rect.center)
         if self.selected is not None:
             pygame.draw.rect(self, BLUE, self.selected.rect, width=2)
 
+    def check_value():
+        row = self.grid[self.selected.row]
+        col = self.grid[:, self.selected.col]
+
+        # get the sub square of the selected square
+        if self.selected.row <= 2:
+            if self.selected.col <= 2:
+                square = self.grid[:2, :2]
+            elif self.selected.col <= 5:
+                square = self.grid[:2, 3:5]
+            else:
+                square = self.grid[:2, 5:]
+        elif self.selected.row <= 
+
+    
     def handle_click(self, pos):
         col = pos[0] // (self.get_width() // 9)
         row = pos[1] // (self.get_height() // 9)
@@ -65,7 +85,7 @@ class Board(pygame.Surface):
     def handle_key(self, key):
         if self.selected is not None:
             if key == 13:
-                print('enter pressed!')
+                self.check_val()
             elif key == 27:
                 self.selected = None
             elif key >= 48 and key <= 57:
