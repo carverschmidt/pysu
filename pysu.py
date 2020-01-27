@@ -21,6 +21,7 @@ class Square:
         self.row = row
         self.col = col
         self.val = None
+        self.og = False
         self.temp = True
 
 
@@ -42,6 +43,25 @@ class Board(pygame.Surface):
         # selected square for input
         self.selected = None
 
+    def new_puzzle(self, puzzle=None):
+        if puzzle == None:
+            puzzle = [[0,0,4,3,0,0,2,0,9],
+                      [0,0,5,0,0,9,0,0,1],
+                      [0,7,0,0,6,0,0,4,3],
+                      [0,0,6,0,0,2,0,8,7],
+                      [1,9,0,0,0,7,4,0,0],
+                      [0,5,0,0,8,3,0,0,0],
+                      [6,0,0,0,0,0,1,0,5],
+                      [0,0,3,5,0,8,6,9,0],
+                      [0,4,2,9,1,0,3,0,0]] 
+
+        for i in range(9):
+            for j in range(9):
+                if puzzle[i][j] != 0:
+                    self.grid[i][j].val = puzzle[i][j]
+                    self.grid[i][j].og = True
+                    self.grid[i][j].temp = False
+                 
     def draw(self):
         self.fill(WHITE)
         for row in self.grid:
@@ -55,28 +75,60 @@ class Board(pygame.Surface):
                         alpha.fill((255, 255, 255, 140))
                         text.blit(alpha, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
                         self.blit(text, (square.rect.x + 5, square.rect.y + 5))
-                    else square.temp:
-                        font = pygame.font.Font(None, 24)
+                    else:
+                        font = pygame.font.Font(None, 48)
                         text = font.render(str(square.val), True, BLACK)
-                        self.blit(text, square.rect.center)
+                        text_rect = text.get_rect()
+                        self.blit(text, (square.rect.centerx - text_rect.width / 2,
+                                        square.rect.centery - text_rect.height // 2))
         if self.selected is not None:
             pygame.draw.rect(self, BLUE, self.selected.rect, width=2)
 
-    def check_value():
+    def check_value(self):
         row = self.grid[self.selected.row]
-        col = self.grid[:, self.selected.col]
+        col = [r[self.selected.col] for r in self.grid] 
 
-        # get the sub square of the selected square
+        # get the sub matrix of the grid for the selected square
         if self.selected.row <= 2:
             if self.selected.col <= 2:
-                square = self.grid[:2, :2]
+                sub_matrix = [r[:3] for r in self.grid[:3]]
             elif self.selected.col <= 5:
-                square = self.grid[:2, 3:5]
+                sub_matrix = [r[3:6] for r in self.grid[:3]]
             else:
-                square = self.grid[:2, 5:]
-        elif self.selected.row <= 
+                sub_matrix = [r[6:] for r in self.grid[:3]]
+        elif self.selected.row <= 5:
+            if self.selected.col <= 2:
+                sub_matrix = [r[:3] for r in self.grid[3:6]]
+            elif self.selected.col <= 5:
+                sub_matrix = [r[3:6] for r in self.grid[3:6]]
+            else:
+                sub_matrix = [r[6:] for r in self.grid[3:6]]
+        else:
+            if self.selected.col <= 2:
+                sub_matrix = [r[:3] for r in self.grid[6:]]
+            elif self.selected.col <= 5:
+                sub_matrix = [r[3:6] for r in self.grid[6:]]
+            else:
+                sub_matrix = [r[6:] for r in self.grid[6:]]
 
-    
+        # check if value exists in row, col, or sub matrix
+        invalid = False
+        for square in row:
+            if not square.temp and square.val == self.selected.val:
+                invalid = True
+                print('invalid entry!')
+        for square in col:
+            if not square.temp and square.val == self.selected.val:
+                invalid = True
+                print('invalid entry!')
+        for row in sub_matrix:
+            for square in row:
+                if not square.temp and square.val == self.selected.val:
+                    invalid = True
+                    print('invalid entry!')
+        if not invalid:
+            self.selected.temp = False
+
     def handle_click(self, pos):
         col = pos[0] // (self.get_width() // 9)
         row = pos[1] // (self.get_height() // 9)
@@ -84,12 +136,16 @@ class Board(pygame.Surface):
 
     def handle_key(self, key):
         if self.selected is not None:
+            if key == 8:
+                if not self.selected.og:
+                    self.selected.val = None
             if key == 13:
-                self.check_val()
+                self.check_value()
             elif key == 27:
                 self.selected = None
-            elif key >= 48 and key <= 57:
-                self.selected.val = key - 48
+            elif key >= 49 and key <= 57:
+                if self.selected.temp:
+                    self.selected.val = key - 48
 
 def main():
     pygame.init()
@@ -99,6 +155,7 @@ def main():
     clock = pygame.time.Clock()
 
     board = Board((window_size[0], window_size[0]))
+    board.new_puzzle()
 
     done = False
     while not done:
@@ -126,5 +183,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 
