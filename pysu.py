@@ -128,6 +128,33 @@ class Board(pygame.Surface):
                     print('invalid entry!')
         if not invalid:
             self.selected.temp = False
+            return True
+        else:
+            return False
+
+    def find_empty(self):
+        for row in self.grid:
+            for square in row:
+                if square.temp == True:
+                    return square
+        return None
+
+    def solve(self):
+        root = self.find_empty()
+        if root is None:
+            return True
+
+        for num in range(1,10):
+            self.selected = root
+            self.selected.val = num
+            if(self.check_value()):
+                if(self.solve()):
+                    return True
+
+                root.val = None
+                root.temp = True
+
+        return False
 
     def handle_click(self, pos):
         col = pos[0] // (self.get_width() // 9)
@@ -146,6 +173,8 @@ class Board(pygame.Surface):
             elif key >= 49 and key <= 57:
                 if self.selected.temp:
                     self.selected.val = key - 48
+        if key == 115:
+            self.solve()
 
 def main():
     pygame.init()
